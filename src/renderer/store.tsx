@@ -19,6 +19,8 @@ export interface AppState {
   quotes: Record<string, Quote>;
   holdings: Record<string, HoldingsResult>; // keyed by ETF symbol
   newsFilter: string; // 'all' or a watchlist symbol
+  centerTab: 'news' | 'analysis';
+  pinnedSymbols: string[];
   modalSymbol: string | null;
 }
 
@@ -27,8 +29,34 @@ type Action =
   | { type: 'quotes'; quotes: Quote[] }
   | { type: 'holdings'; result: HoldingsResult }
   | { type: 'newsFilter'; value: string }
+  | { type: 'centerTab'; value: AppState['centerTab'] }
+  | { type: 'togglePinned'; symbol: string }
+  | { type: 'removePinned'; symbol: string }
   | { type: 'openChart'; symbol: string }
   | { type: 'closeChart' };
+
+const MAX_PINNED_SYMBOLS = 9;
+const PINNED_STORAGE_KEY = 'quant:pinned-symbols:v1';
+
+function loadPinnedSymbols(): string[] {
+  try {
+    const raw = window.localStorage.getItem(PINNED_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    const symbols: string[] = [];
+    for (const value of parsed) {
+      if (typeof value !== 'string') continue;
+      const symbol = value.trim().toUpperCase();
+      if (!symbol || symbols.includes(symbol)) continue;
+      symbols.push(symbol);
+      if (symbols.length >= MAX_PINNED_SYMBOLS) break;
+    }
+    return symbols;
+  } catch {
+    return [];
+  }
+}
 
 const initialState: AppState = {
   watchlist: [],
@@ -36,6 +64,8 @@ const initialState: AppState = {
   quotes: {},
   holdings: {},
   newsFilter: 'all',
+  centerTab: 'news',
+  pinnedSymbols: loadPinnedSymbols(),
   modalSymbol: null,
 };
 
@@ -47,6 +77,7 @@ function reducer(state: AppState, action: Action): AppState {
         ...state,
         watchlist: action.items,
         watchlistLoaded: true,
+        pinnedSymbols: state.pinnedSymbols.filter((symbol) => symbols.has(symbol)),
         newsFilter:
           state.newsFilter !== 'all' && !symbols.has(state.newsFilter)
             ? 'all'
@@ -65,6 +96,25 @@ function reducer(state: AppState, action: Action): AppState {
       };
     case 'newsFilter':
       return { ...state, newsFilter: action.value };
+    case 'centerTab':
+      return { ...state, centerTab: action.value };
+    case 'togglePinned': {
+      const symbol = action.symbol.trim().toUpperCase();
+      if (!symbol) return state;
+      if (state.pinnedSymbols.includes(symbol)) {
+        return {
+          ...state,
+          pinnedSymbols: state.pinnedSymbols.filter((s) => s !== symbol),
+        };
+      }
+      if (state.pinnedSymbols.length >= MAX_PINNED_SYMBOLS) return state;
+      return { ...state, pinnedSymbols: [...state.pinnedSymbols, symbol] };
+    }
+    case 'removePinned':
+      return {
+        ...state,
+        pinnedSymbols: state.pinnedSymbols.filter((s) => s !== action.symbol),
+      };
     case 'openChart':
       return { ...state, modalSymbol: action.symbol };
     case 'closeChart':
@@ -76,6 +126,9 @@ export interface AppActions {
   addSymbol(symbol: string): Promise<{ ok: boolean; error?: string }>;
   removeSymbol(symbol: string): Promise<void>;
   setNewsFilter(value: string): void;
+  setCenterTab(value: AppState['centerTab']): void;
+  togglePinnedSymbol(symbol: string): void;
+  removePinnedSymbol(symbol: string): void;
   openChart(symbol: string): void;
   closeChart(): void;
   refreshQuotes(): Promise<void>;
@@ -118,6 +171,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(
+        PINNED_STORAGE_KEY,
+        JSON.stringify(state.pinnedSymbols),
+      );
+    } catch {
+      // Non-critical: pinning still works for the current session.
+    }
+  }, [state.pinnedSymbols]);
+
   // Smoke-test hook: main can launch us with ?smokeModal=SPY to exercise the
   // chart modal in automated screenshot runs.
   useEffect(() => {
@@ -128,6 +192,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       2500,
     );
     return () => clearTimeout(t);
+  }, []);
+
+  useEffect(() => {
+    const tab = new URLSearchParams(window.location.search).get('smokeTab');
+    if (tab === 'analysis' || tab === 'news') {
+      dispatch({ type: 'centerTab', value: tab });
+    }
   }, []);
 
   const watchlistKey = state.watchlist.map((i) => i.symbol).join(',');
@@ -194,6 +265,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       },
       setNewsFilter(value: string) {
         dispatch({ type: 'newsFilter', value });
+      },
+      setCenterTab(value: AppState['centerTab']) {
+        dispatch({ type: 'centerTab', value });
+      },
+      togglePinnedSymbol(symbol: string) {
+        dispatch({ type: 'togglePinned', symbol });
+      },
+      removePinnedSymbol(symbol: string) {
+        dispatch({ type: 'removePinned', symbol });
       },
       openChart(symbol: string) {
         dispatch({ type: 'openChart', symbol });

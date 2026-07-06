@@ -253,14 +253,14 @@ Quant/
           QuantAgentPanel.tsx Agentic Quant AI chat UI
           QuantDecisionPanel.tsx Deterministic Signal Desk
           useMacroOverlays.ts Macro overlay data hook
-      styles/                 App, chart, watchlist, news, earnings CSS
+      styles/                 App, chart, watchlist, news, earnings, analysis CSS
     shared/
       ipc.ts                  IPC channel names
       types.ts                Shared API and market data contracts
       quant.ts                Deterministic signal engine
   scripts/
     build.mjs                 esbuild bundle script
-    package-release.mjs       Runnable macOS and Windows release builder
+    package-release.mjs       Runnable macOS/Windows release folder and archive builder
     test-quant.mjs            Signal-engine tests
   docs/
     assets/
@@ -295,9 +295,9 @@ The renderer does not directly call remote market endpoints. It asks the Electro
 | `npm start` | Build and launch the desktop app |
 | `npm run smoke` | Build, launch in smoke mode, and write `dist/smoke.png` |
 | `npm run smoke:modal` | Build, launch with the SPY chart modal open |
-| `npm run package:mac` | Build a runnable macOS app folder in `release/` |
-| `npm run package:win` | Build a runnable Windows x64 app folder in `release/` |
-| `npm run package:all` | Build macOS and Windows release folders |
+| `npm run package:mac` | Build a runnable macOS app folder and zip archive in `release/` |
+| `npm run package:win` | Build a runnable Windows x64 app folder and zip archive in `release/` |
+| `npm run package:all` | Build macOS and Windows release folders plus zip archives |
 
 ## Release Packaging
 
@@ -306,11 +306,12 @@ Quant includes a lightweight release packager at `scripts/package-release.mjs`. 
 The packager:
 
 1. Runs `scripts/build.mjs`.
-2. Creates a minimal Electron app payload under `resources/app`.
-3. Copies the compiled `dist/` payload.
-4. Writes a minimal runtime `package.json`.
-5. Copies `LICENSE` and `AUTHORS.md` into the packaged app.
-6. Produces runnable release folders under `release/`.
+2. Uses the installed Electron runtime, or downloads the matching official Electron runtime into `.release-cache/` if the local runtime is missing.
+3. Creates a minimal Electron app payload under `resources/app`.
+4. Copies the compiled `dist/` payload.
+5. Writes a minimal runtime `package.json`.
+6. Copies `LICENSE` and `AUTHORS.md` into the packaged app.
+7. Produces runnable release folders and distributable zip archives under `release/`.
 
 Build both release folders:
 
@@ -322,10 +323,18 @@ Outputs:
 
 ```text
 release/Quant-mac-arm64/Quant.app
+release/Quant-mac-arm64.zip
 release/Quant-win-x64/Quant.exe
+release/Quant-win-x64.zip
 ```
 
-The Windows folder must be distributed as a folder. Do not distribute `Quant.exe` alone because it depends on adjacent Electron runtime files.
+Distribute the zip archives or the full release folders. Do not distribute `Quant.exe` alone because it depends on adjacent Electron runtime files.
+
+On machines where global `node`/`npm` is unavailable but a working Electron runtime exists, the scripts can be run through Electron's Node mode:
+
+```bash
+ELECTRON_RUN_AS_NODE=1 /path/to/Electron.app/Contents/MacOS/Electron scripts/package-release.mjs --platform=darwin,win32
+```
 
 ## Troubleshooting
 

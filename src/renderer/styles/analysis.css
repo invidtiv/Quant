@@ -1,0 +1,767 @@
+/* Center tabs and Analysis Lab. Uses existing app tokens only. */
+
+.center-tabs {
+  display: grid;
+  grid-template-rows: 36px minmax(0, 1fr);
+  height: 100%;
+  min-height: 0;
+}
+
+.ct-bar {
+  display: flex;
+  align-items: end;
+  gap: 2px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--surface-1);
+}
+
+.ct-tab {
+  height: 31px;
+  padding: 0 14px;
+  border: 1px solid transparent;
+  border-bottom: 0;
+  border-radius: var(--r-sm) var(--r-sm) 0 0;
+  background: transparent;
+  color: var(--text-3);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ct-tab:hover {
+  color: var(--text-1);
+  background: var(--surface-2);
+}
+
+.ct-tab.is-active {
+  color: var(--text-1);
+  border-color: var(--border-subtle);
+  background: var(--bg);
+}
+
+.ct-panel {
+  min-height: 0;
+}
+
+.al-panel {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: 100%;
+  min-height: 0;
+  background: var(--bg);
+}
+
+.al-chrome {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 13px 16px 11px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.al-chrome h2,
+.al-section h3,
+.al-summary h3,
+.al-card h3,
+.al-thesis h3 {
+  margin: 0;
+  color: var(--text-1);
+  letter-spacing: 0;
+}
+
+.al-chrome h2 {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.al-chrome p,
+.al-section-head p,
+.al-summary p,
+.al-thesis-head p {
+  margin: 2px 0 0;
+  color: var(--text-3);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.al-limit {
+  flex: none;
+  padding: 3px 7px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-sm);
+  color: var(--text-2);
+  background: var(--surface-1);
+  font-size: 10px;
+}
+
+.al-body {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 12px 14px 18px;
+}
+
+.al-section {
+  display: grid;
+  gap: 9px;
+  margin-bottom: 13px;
+}
+
+.al-section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.al-section h3,
+.al-card h3,
+.al-thesis h3 {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.al-picker {
+  display: flex;
+  gap: 5px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.al-picker::-webkit-scrollbar {
+  display: none;
+}
+
+.al-pick {
+  display: inline-grid;
+  grid-template-columns: minmax(58px, auto) 26px;
+  flex: none;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-sm);
+  background: var(--surface-1);
+}
+
+.al-pick.is-active {
+  border-color: var(--accent);
+}
+
+.al-pick-main,
+.al-pin {
+  border: 0;
+  background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+}
+
+.al-pick-main {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 27px;
+  padding: 0 8px;
+  font-size: 11px;
+}
+
+.al-pick-main span {
+  color: var(--text-1);
+  font-weight: 700;
+}
+
+.al-pick-main em {
+  color: var(--text-3);
+  font-size: 8px;
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.al-pin {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  border-left: 1px solid var(--border-subtle);
+}
+
+.al-pin:hover,
+.al-pick-main:hover {
+  background: var(--surface-2);
+  color: var(--text-1);
+}
+
+.al-pin.is-pinned {
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+}
+
+.al-pin:disabled {
+  color: var(--text-3);
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.al-empty-track,
+.al-thesis-empty {
+  padding: 12px;
+  border: 1px dashed var(--border-subtle);
+  border-radius: var(--r-sm);
+  color: var(--text-3);
+  background: var(--surface-1);
+  font-size: 11px;
+}
+
+.al-track-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.al-track {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  min-width: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-sm);
+  background: var(--surface-1);
+  overflow: hidden;
+}
+
+.al-track.is-active {
+  border-color: var(--accent);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.al-track-main {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
+  column-gap: 7px;
+  row-gap: 1px;
+  min-width: 0;
+  padding: 8px;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.al-track-main:hover {
+  background: var(--surface-2);
+}
+
+.al-track-symbol {
+  color: var(--text-1);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.al-track-name {
+  min-width: 0;
+  color: var(--text-3);
+  font-size: 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.al-track-price {
+  grid-row: 1;
+  grid-column: 3;
+  color: var(--text-1);
+  font-size: 12px;
+}
+
+.al-track-change {
+  grid-column: 3;
+  justify-self: end;
+  font-size: 10px;
+}
+
+.al-track-change.up,
+.al-stat.up b {
+  color: var(--up);
+}
+
+.al-track-change.down,
+.al-stat.down b {
+  color: var(--down);
+}
+
+.al-track-actions {
+  display: grid;
+  width: 52px;
+  border-left: 1px solid var(--border-subtle);
+}
+
+.al-track-actions button {
+  border: 0;
+  background: transparent;
+  color: var(--text-3);
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.al-track-actions button + button {
+  border-top: 1px solid var(--border-subtle);
+}
+
+.al-track-actions button:hover {
+  color: var(--text-1);
+  background: var(--surface-2);
+}
+
+.al-summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  margin-bottom: 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-sm);
+  background: var(--surface-1);
+}
+
+.al-kicker {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--accent-strong);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+/* ---------------------------------------------------------------- */
+/* Multi-chart panel                                                */
+/* ---------------------------------------------------------------- */
+
+.mc-panel {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-sm);
+  background: var(--surface-1);
+}
+
+.mc-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.mc-head h3 {
+  margin: 0;
+  color: var(--text-1);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.mc-head p {
+  margin: 2px 0 0;
+  color: var(--text-3);
+  font-size: 11px;
+}
+
+.mc-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.mc-segment {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+}
+
+.mc-segment button {
+  height: 23px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-3);
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.mc-segment button:hover {
+  color: var(--text-1);
+  background: var(--surface-3);
+}
+
+.mc-segment button.is-active {
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+}
+
+.mc-error {
+  padding: 8px;
+  border: 1px solid var(--warn-soft);
+  border-radius: var(--r-sm);
+  color: var(--warn);
+  background: var(--surface-2);
+  font-size: 11px;
+}
+
+.mc-single {
+  min-height: 360px;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.mc-chart-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 11px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.mc-symbol {
+  display: inline-block;
+  margin-right: 8px;
+  color: var(--text-1);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.mc-name {
+  color: var(--text-3);
+  font-size: 11px;
+}
+
+.mc-quote {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.mc-quote b {
+  color: var(--text-1);
+  font-size: 13px;
+}
+
+.mc-quote span,
+.mc-tile-head em {
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.mc-quote .up,
+.mc-tile-head .up {
+  color: var(--up);
+}
+
+.mc-quote .down,
+.mc-tile-head .down {
+  color: var(--down);
+}
+
+.mc-single-canvas {
+  min-height: 0;
+  height: 316px;
+}
+
+.mc-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.mc-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.mc-tile {
+  min-width: 0;
+  height: 176px;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-sm);
+  background: var(--bg);
+  color: var(--text-2);
+  text-align: left;
+  cursor: pointer;
+}
+
+.mc-tile:hover,
+.mc-tile.is-active {
+  border-color: var(--accent);
+}
+
+.mc-tile-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 9px 5px;
+}
+
+.mc-tile-head b {
+  color: var(--text-1);
+  font-size: 12px;
+}
+
+.mc-tile-chart {
+  min-height: 0;
+  display: block;
+  height: 100%;
+}
+
+.mc-loading {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  color: var(--text-3);
+  font-size: 11px;
+}
+
+.mc-tile.empty {
+  display: grid;
+  place-items: center;
+  border-style: dashed;
+  color: var(--text-3);
+  background: var(--surface-1);
+  cursor: default;
+}
+
+.al-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.al-card,
+.al-thesis {
+  min-width: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-sm);
+  background: var(--surface-1);
+}
+
+.al-card {
+  padding: 12px;
+}
+
+.al-card-head,
+.al-thesis-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.al-card-head span,
+.al-source {
+  color: var(--text-3);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.al-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.al-stat {
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+}
+
+.al-stat span {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--text-3);
+  font-size: 10px;
+}
+
+.al-stat b {
+  display: block;
+  min-width: 0;
+  color: var(--text-1);
+  font-size: 13px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.al-note {
+  margin: 9px 0 0;
+  color: var(--text-3);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.al-mini-list {
+  display: grid;
+  gap: 5px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.al-mini-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border-subtle);
+  color: var(--text-2);
+  font-size: 11px;
+}
+
+.al-mini-list b {
+  flex: none;
+  color: var(--text-1);
+  font-weight: 600;
+}
+
+.al-model-steps {
+  display: grid;
+  gap: 7px;
+}
+
+.al-model-steps div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-2);
+  font-size: 11px;
+}
+
+.al-model-steps b {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  color: var(--accent-strong);
+  font-size: 10px;
+}
+
+.al-card textarea {
+  width: 100%;
+  min-height: 96px;
+  resize: vertical;
+  margin-top: 11px;
+  padding: 8px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-sm);
+  background: var(--bg);
+  color: var(--text-1);
+  font: inherit;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.al-card textarea::placeholder {
+  color: var(--text-3);
+}
+
+.al-thesis {
+  margin-top: 10px;
+  padding: 12px;
+}
+
+.al-primary {
+  flex: none;
+  min-height: 28px;
+  padding: 0 12px;
+  border: 1px solid var(--accent);
+  border-radius: var(--r-sm);
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.al-primary:hover {
+  background: var(--surface-3);
+}
+
+.al-primary:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.al-thesis-output {
+  display: grid;
+  gap: 8px;
+}
+
+.al-markdown {
+  display: grid;
+  gap: 7px;
+  color: var(--text-2);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.al-markdown h4,
+.al-markdown p,
+.al-markdown ul {
+  margin: 0;
+}
+
+.al-markdown h4 {
+  color: var(--text-1);
+  font-size: 13px;
+}
+
+.al-markdown ul {
+  padding-left: 17px;
+}
+
+.al-markdown code {
+  padding: 1px 4px;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  color: var(--text-1);
+}
+
+@media (max-width: 1120px) {
+  .al-track-grid,
+  .al-grid,
+  .mc-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mc-head {
+    display: grid;
+  }
+
+  .mc-controls {
+    justify-content: flex-start;
+  }
+}

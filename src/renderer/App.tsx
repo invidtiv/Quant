@@ -2,7 +2,7 @@ import React from 'react';
 import { AppProvider, useApp } from './store';
 import { TopBar } from './components/TopBar';
 import { Watchlist } from './components/Watchlist';
-import { NewsFeed } from './components/NewsFeed';
+import { CenterTabs } from './components/CenterTabs';
 import { EarningsCalendar } from './components/EarningsCalendar';
 import { ChartModal } from './components/ChartModal';
 import { OnboardingWizard } from './components/OnboardingWizard';
@@ -42,8 +42,8 @@ function Shell() {
       <aside className="sidebar-slot" aria-label="Watchlist">
         <Watchlist />
       </aside>
-      <main className="center-slot" aria-label="Market news">
-        <NewsFeed />
+      <main className="center-slot" aria-label="Workspace">
+        <CenterTabs />
       </main>
       <section className="right-slot" aria-label="Earnings calendar">
         <EarningsCalendar />

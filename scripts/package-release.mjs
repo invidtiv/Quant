@@ -23,6 +23,7 @@ import {
 } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { downloadArtifact } from '@electron/get';
 import extractZip from 'extract-zip';
@@ -91,6 +92,8 @@ function makeAppPayload(targetDir) {
   rmSync(appDir, { recursive: true, force: true });
   mkdirSync(appDir, { recursive: true });
   cpSync(r('dist'), path.join(appDir, 'dist'), { recursive: true });
+  rmSync(path.join(appDir, 'dist', 'smoke.png'), { force: true });
+  rmSync(path.join(appDir, 'dist', 'smoke-modal.png'), { force: true });
   writeFileSync(
     path.join(appDir, 'package.json'),
     JSON.stringify(
@@ -126,6 +129,15 @@ function copyRuntimeNotice(targetDir) {
   writeFileSync(path.join(targetDir, 'README.txt'), readme);
 }
 
+function createZipArchive(sourceDir, outPath) {
+  rmSync(outPath, { force: true });
+  execFileSync('ditto', ['-c', '-k', '--sequesterRsrc', '--keepParent', sourceDir, outPath], {
+    cwd: path.dirname(sourceDir),
+    stdio: 'inherit',
+  });
+  log(`archive written to ${path.relative(root, outPath)}`);
+}
+
 function updateMacPlist(appPath) {
   const plistPath = path.join(appPath, 'Contents', 'Info.plist');
   let plist = readFileSync(plistPath, 'utf8');
@@ -142,7 +154,32 @@ function updateMacPlist(appPath) {
   writeFileSync(plistPath, plist);
 }
 
-function packageMac(arch) {
+async function resolveMacRuntime(targetArch) {
+  const localRuntime = r('node_modules/electron/dist/Electron.app');
+  if (existsSync(localRuntime)) return localRuntime;
+
+  const cacheDir = r('.release-cache');
+  mkdirSync(cacheDir, { recursive: true });
+  log(`downloading Electron ${electronVersion} darwin-${targetArch}`);
+  const zipPath = await downloadArtifact({
+    version: electronVersion,
+    platform: 'darwin',
+    arch: targetArch,
+    artifactName: 'electron',
+    cacheRoot: cacheDir,
+  });
+  const extractDir = path.join(tmpdir(), `quant-electron-${electronVersion}-${targetArch}`);
+  rmSync(extractDir, { recursive: true, force: true });
+  mkdirSync(extractDir, { recursive: true });
+  await extractZip(zipPath, { dir: extractDir });
+  const downloadedRuntime = path.join(extractDir, 'Electron.app');
+  if (!existsSync(downloadedRuntime)) {
+    throw new Error(`Downloaded Electron runtime did not contain Electron.app: ${zipPath}`);
+  }
+  return downloadedRuntime;
+}
+
+async function packageMac(arch) {
   const targetArch = arch ?? os.arch();
   if (process.platform !== 'darwin' || targetArch !== process.arch) {
     throw new Error(
@@ -150,11 +187,12 @@ function packageMac(arch) {
     );
   }
 
+  const runtimeApp = await resolveMacRuntime(targetArch);
   const targetDir = r('release', `${productName}-mac-${targetArch}`);
   const appPath = path.join(targetDir, `${productName}.app`);
   rmSync(targetDir, { recursive: true, force: true });
   mkdirSync(targetDir, { recursive: true });
-  cpSync(r('node_modules/electron/dist/Electron.app'), appPath, {
+  cpSync(runtimeApp, appPath, {
     recursive: true,
     verbatimSymlinks: true,
   });
@@ -168,6 +206,7 @@ function packageMac(arch) {
   adHocSignMacApp(appPath);
   copyRuntimeNotice(targetDir);
   log(`macOS app written to ${path.relative(root, appPath)}`);
+  createZipArchive(targetDir, r('release', `${productName}-mac-${targetArch}.zip`));
 }
 
 async function packageWindows(arch) {
@@ -196,6 +235,7 @@ async function packageWindows(arch) {
   makeAppPayload(resourcesDir);
   copyRuntimeNotice(targetDir);
   log(`Windows app written to ${path.relative(root, newExe)}`);
+  createZipArchive(targetDir, r('release', `${productName}-win-${targetArch}.zip`));
 }
 
 buildApp();
@@ -203,7 +243,7 @@ rmSync(r('release'), { recursive: true, force: true });
 
 for (const platform of requestedPlatforms) {
   if (platform === 'darwin' || platform === 'mac') {
-    packageMac(requestedArch);
+    await packageMac(requestedArch);
   } else if (platform === 'win32' || platform === 'win') {
     await packageWindows(requestedArch ?? 'x64');
   } else {

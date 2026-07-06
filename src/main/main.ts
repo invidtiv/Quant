@@ -58,6 +58,10 @@ const smokeRailArg = process.argv.find((arg) => arg.startsWith('--smoke-rail='))
 const smokeRail = smokeRailArg?.slice('--smoke-rail='.length);
 const smokeOverlaysArg = process.argv.find((arg) => arg.startsWith('--smoke-overlays='));
 const smokeOverlays = smokeOverlaysArg?.slice('--smoke-overlays='.length);
+const smokeTabArg = process.argv.find((arg) => arg.startsWith('--smoke-tab='));
+const smokeTab = smokeTabArg?.slice('--smoke-tab='.length);
+const smokeChartModeArg = process.argv.find((arg) => arg.startsWith('--smoke-chart-mode='));
+const smokeChartMode = smokeChartModeArg?.slice('--smoke-chart-mode='.length);
 
 // ---------------------------------------------------------------------------
 // Input validation helpers
@@ -398,6 +402,10 @@ function createWindow(): void {
   if (smokeModalSymbol) query.smokeModal = smokeModalSymbol;
   if (smokeRail) query.smokeRail = smokeRail;
   if (smokeOverlays) query.smokeOverlays = smokeOverlays;
+  if (smokeTab === 'analysis' || smokeTab === 'news') query.smokeTab = smokeTab;
+  if (smokeChartMode === 'grid' || smokeChartMode === 'single') {
+    query.smokeChartMode = smokeChartMode;
+  }
   if (forceOnboarding) query.onboarding = '1';
   if (Object.keys(query).length) {
     void win.loadFile(indexPath, { query });
