@@ -5,6 +5,7 @@ import type {
   MacroOverlaySeries,
   NewsItem,
   PivotNewsResult,
+  QuantHarnessTrace,
   QuantInsightRecord,
   QuantInsightResponse,
   ValuationSnapshot,
@@ -18,6 +19,7 @@ interface ChatEntry {
   text: string;
   source?: QuantInsightResponse['source'];
   saved?: boolean;
+  harness?: QuantHarnessTrace;
 }
 
 function renderInline(text: string): React.ReactNode[] {
@@ -86,6 +88,40 @@ function ThinkingProgress() {
   );
 }
 
+function HarnessTraceView({ trace }: { trace: QuantHarnessTrace }) {
+  return (
+    <details className="cm-harness" open={trace.mode === 'orchestrated'}>
+      <summary>
+        <span>Verified harness</span>
+        <b>{trace.mode}</b>
+      </summary>
+      <div className="cm-harness-stages">
+        {trace.stages.map((stage) => (
+          <div key={stage.name} className={`cm-harness-stage ${stage.status}`}>
+            <i aria-hidden="true" />
+            <span>{stage.name}</span>
+            <p>{stage.summary}</p>
+            <em>{stage.durationMs ? `${(stage.durationMs / 1000).toFixed(1)}s` : stage.status}</em>
+          </div>
+        ))}
+      </div>
+      <div className="cm-evidence-ledger">
+        <span>Evidence ledger · {trace.evidence.length}</span>
+        {trace.evidence.map((item) => (
+          <div key={item.id} className={item.quality}>
+            <b>{item.id}</b>
+            <p>{item.label}</p>
+            <em>{item.source}</em>
+          </div>
+        ))}
+      </div>
+      {trace.finalChecks.length > 0 && (
+        <p className="cm-harness-checks">Checks: {trace.finalChecks.join('; ')}</p>
+      )}
+    </details>
+  );
+}
+
 export function QuantAgentPanel({
   symbol,
   range,
@@ -112,11 +148,6 @@ export function QuantAgentPanel({
   const [chat, setChat] = useState<ChatEntry[]>([]);
   const [savedLoaded, setSavedLoaded] = useState(false);
   const logRef = useRef<HTMLDivElement | null>(null);
-  const autoKeyRef = useRef<string | null>(null);
-  const smokeMode = useMemo(
-    () => new URLSearchParams(window.location.search).has('smokeModal'),
-    [],
-  );
 
   const news = useMemo<NewsItem[]>(
     () =>
@@ -128,11 +159,10 @@ export function QuantAgentPanel({
   );
 
   const runAnalysis = useCallback(
-    async (ask?: string, auto = false) => {
+    async (ask?: string) => {
       if (!evaluation || busy) return;
       setBusy(true);
       try {
-        const snapshot = await api.captureChartSnapshot(symbol).catch(() => null);
         const response = await api.analyzeQuant({
           symbol,
           range,
@@ -141,7 +171,6 @@ export function QuantAgentPanel({
           earnings,
           valuation,
           macroOverlays,
-          snapshotDataUrl: snapshot?.dataUrl,
           question: ask,
           thinkingMode,
         });
@@ -149,12 +178,12 @@ export function QuantAgentPanel({
         setChat((items) => [
           ...items,
           ...(ask ? [{ role: 'user' as const, text: ask }] : []),
-          { role: 'assistant' as const, text: response.answer, source: response.source },
+          { role: 'assistant' as const, text: response.answer, source: response.source, harness: response.harness },
         ].slice(-12));
         onPlay?.(response.ok ? 'notify' : 'down');
       } finally {
         setBusy(false);
-        if (!auto) setQuestion('');
+        setQuestion('');
       }
     },
     [
@@ -185,6 +214,7 @@ export function QuantAgentPanel({
             text: record.answer,
             source: record.source,
             saved: true,
+            harness: record.harness,
           }));
         setChat(restored);
         setLastInsight(records[0] ?? null);
@@ -203,18 +233,6 @@ export function QuantAgentPanel({
     logRef.current?.scrollTo({ top: logRef.current.scrollHeight, behavior: 'smooth' });
   }, [busy, chat.length]);
 
-  useEffect(() => {
-    if (smokeMode) return;
-    if (!evaluation) return;
-    const key = `${symbol}|${range}|${evaluation.evaluatedAt}|${evaluation.decision}`;
-    if (autoKeyRef.current === key) return;
-    autoKeyRef.current = key;
-    const id = window.setTimeout(() => {
-      void runAnalysis(undefined, true);
-    }, 2200);
-    return () => window.clearTimeout(id);
-  }, [evaluation, range, runAnalysis, smokeMode, symbol]);
-
   const context = [
     { label: 'Signal', value: evaluation ? `${evaluation.confidence}/100 ${evaluation.decision}` : 'waiting' },
     { label: 'News', value: `${news.length} headlines` },
@@ -228,7 +246,7 @@ export function QuantAgentPanel({
       <div className="cm-agent-head">
         <div>
           <h3>Quant AI</h3>
-          <p>Agentic chart chat for {symbol}</p>
+          <p>Verified decision memo for {symbol}</p>
         </div>
         <label className="cm-think">
           <input
@@ -236,7 +254,7 @@ export function QuantAgentPanel({
             checked={thinkingMode}
             onChange={(e) => setThinkingMode(e.currentTarget.checked)}
           />
-          Thinking
+          Verified harness
         </label>
       </div>
 
@@ -255,7 +273,7 @@ export function QuantAgentPanel({
             <h4>Ask for a decision memo, risk critique, or invalidation check.</h4>
             <p>
               The agent reads the chart signal, pivot headlines, earnings, valuation,
-              macro overlays, and the current screenshot before answering.
+              and macro evidence before answering.
             </p>
           </div>
         ) : (
@@ -267,7 +285,10 @@ export function QuantAgentPanel({
                   : 'you'}
               </span>
               {item.role === 'assistant' ? (
-                <MarkdownText text={item.text} />
+                <>
+                  <MarkdownText text={item.text} />
+                  {item.harness && <HarnessTraceView trace={item.harness} />}
+                </>
               ) : (
                 <p>{item.text}</p>
               )}
@@ -278,9 +299,10 @@ export function QuantAgentPanel({
           <div className="cm-agent-run">
             <ThinkingProgress />
             <ol>
-              <li>Capturing chart snapshot</li>
-              <li>Hydrating signal, news, earnings, valuation, and macro context</li>
-              <li>Composing the trading memo</li>
+              <li>Locking and validating the evidence ledger</li>
+              <li>Running the isolated analyst worker</li>
+              <li>Running the independent verifier</li>
+              <li>Orchestrating and checking the final memo</li>
             </ol>
           </div>
         )}

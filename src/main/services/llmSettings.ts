@@ -4,7 +4,7 @@ import path from 'node:path';
 import type { LlmSettings } from '../../shared/types';
 
 const DEFAULT_BASE_URL = process.env.QUANT_LLM_BASE_URL ?? 'http://127.0.0.1:8080';
-const DEFAULT_MODEL = process.env.QUANT_LLM_MODEL ?? 'gemma-4-e4b';
+const DEFAULT_MODEL = process.env.QUANT_LLM_MODEL ?? 'gemma-4-e4b-it';
 
 function envEnabled(): boolean {
   return /^(1|true|yes)$/i.test(process.env.QUANT_LLM_ENABLED ?? '') ||

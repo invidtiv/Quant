@@ -1,0 +1,38 @@
+# Changelog
+
+All notable changes to Quant are documented here.
+
+## [1.2.0] - 2026-07-12
+
+### Added
+
+- Evidence-Backed Signal Desk with numbered source and quality indicators for deterministic signals, chart data, historical strategy checks, earnings, and valuation.
+- Local Decision Journal for saving thesis, catalyst, invalidation, lifecycle status, notes, and the exact signal and risk snapshot used for a decision.
+- Transactional journal persistence in Electron local app data.
+- Verified Quant AI harness with isolated analyst and verifier contexts followed by a bounded final orchestrator.
+- Harness trace UI with worker outcomes, timing, evidence ledger, validation results, and failure attribution.
+- Deterministic evidence-ledger tests.
+
+### Changed
+
+- Quant AI responses now use numbered evidence citations and exact Decision, Evidence, Invalidation, and Risk sections.
+- Model responses are checked for structural completeness, valid evidence IDs, and prohibited certainty language, with at most one constrained repair.
+- News headlines and pasted material are explicitly treated as untrusted evidence rather than model instructions.
+- Multi-pass model analysis now runs only when requested instead of automatically when a chart opens.
+- The default local model identifier is `gemma-4-e4b-it`, matching the supported llama.cpp runtime.
+- Local AI copy now describes a verified decision memo instead of implying an unrestricted autonomous agent.
+
+### Reliability
+
+- Analyst failure falls back to a deterministic memo.
+- Verifier failure is recorded without discarding a valid analyst result.
+- Orchestrator failure returns the analyst draft with explicit failure metadata.
+- Journal writes use a temporary file and atomic rename to reduce corruption risk.
+
+## [1.1.0] - 2026-07-07
+
+### Added
+
+- Signal Board scanner for end-of-day technical setups across the bundled U.S. stock universe, watchlist, and ETF holdings.
+- Deterministic signal scoring, setup classification, risk plans, and historical strategy summaries.
+- macOS arm64 and Windows x64 release archives published as GitHub Release assets.

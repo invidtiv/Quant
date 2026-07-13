@@ -90,7 +90,7 @@ export function OnboardingWizard() {
   const [llm, setLlm] = useState<LlmSettings>({
     enabled: false,
     baseUrl: 'http://127.0.0.1:8080',
-    model: 'gemma-4-e4b',
+    model: 'gemma-4-e4b-it',
   });
   const [savingLlm, setSavingLlm] = useState(false);
 
@@ -266,7 +266,7 @@ export function OnboardingWizard() {
                 <input
                   value={llm.model}
                   onChange={(event) => setLlm((current) => ({ ...current, model: event.currentTarget.value }))}
-                  placeholder="gemma-4-e4b"
+                  placeholder="gemma-4-e4b-it"
                 />
               </label>
             </div>

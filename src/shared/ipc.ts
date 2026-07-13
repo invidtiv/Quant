@@ -16,6 +16,8 @@ export const IPC = {
   chartSnapshotCapture: 'chart:capture-snapshot',
   quantAnalyze: 'quant:analyze',
   quantInsightsGet: 'quant:insights-get',
+  quantJournalGet: 'quant:journal-get',
+  quantJournalSave: 'quant:journal-save',
   llmSettingsGet: 'llm-settings:get',
   llmSettingsSave: 'llm-settings:save',
   valuationGet: 'valuation:get',

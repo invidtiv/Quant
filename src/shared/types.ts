@@ -212,6 +212,35 @@ export interface QuantInsightRequest {
   thinkingMode?: boolean;
 }
 
+export type QuantHarnessStageName = 'evidence' | 'analyst' | 'verifier' | 'orchestrator';
+export type QuantHarnessStageStatus = 'passed' | 'warning' | 'failed' | 'skipped';
+
+export interface QuantEvidenceItem {
+  id: string;
+  category: 'signal' | 'risk' | 'market' | 'news' | 'earnings' | 'valuation' | 'macro';
+  label: string;
+  value: string;
+  source: string;
+  observedAt?: string;
+  quality: 'verified' | 'warning' | 'unavailable';
+}
+
+export interface QuantHarnessStage {
+  name: QuantHarnessStageName;
+  status: QuantHarnessStageStatus;
+  summary: string;
+  durationMs: number;
+}
+
+export interface QuantHarnessTrace {
+  runId: string;
+  mode: 'orchestrated' | 'single-pass' | 'deterministic';
+  stages: QuantHarnessStage[];
+  evidence: QuantEvidenceItem[];
+  verifierSummary?: string;
+  finalChecks: string[];
+}
+
 export interface QuantInsightResponse {
   ok: boolean;
   source: 'local-llm' | 'deterministic-fallback';
@@ -219,6 +248,7 @@ export interface QuantInsightResponse {
   answer: string;
   generatedAt: string;
   error?: string;
+  harness?: QuantHarnessTrace;
 }
 
 export interface QuantInsightRecord extends QuantInsightResponse {
@@ -229,6 +259,46 @@ export interface QuantInsightRecord extends QuantInsightResponse {
   decision?: import('./quant').TradeDecision;
   setupType?: import('./quant').SetupType;
   confidence?: number;
+}
+
+export type QuantJournalStatus = 'planned' | 'active' | 'invalidated' | 'closed';
+
+export interface QuantJournalEntryInput {
+  id?: string;
+  symbol: string;
+  range: ChartRange;
+  status: QuantJournalStatus;
+  thesis: string;
+  catalyst: string;
+  invalidation: string;
+  notes?: string;
+  evaluation: import('./quant').SignalEvaluation;
+}
+
+export interface QuantJournalEntry {
+  id: string;
+  symbol: string;
+  range: ChartRange;
+  status: QuantJournalStatus;
+  thesis: string;
+  catalyst: string;
+  invalidation: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+  signalSnapshot: {
+    decision: import('./quant').TradeDecision;
+    setupType: import('./quant').SetupType;
+    confidence: number;
+    strategyVersion: string;
+    evaluatedAt: string;
+    entry: number;
+    stop: number;
+    target1: number;
+    target2: number;
+    rewardRisk1: number;
+    blockers: string[];
+  };
 }
 
 export interface LlmSettings {
@@ -287,6 +357,8 @@ export interface QuantApi {
   captureChartSnapshot(symbol: string): Promise<{ dataUrl: string; capturedAt: string } | null>;
   analyzeQuant(request: QuantInsightRequest): Promise<QuantInsightResponse>;
   getQuantInsights(symbol: string, range?: ChartRange): Promise<QuantInsightRecord[]>;
+  getQuantJournal(symbol: string): Promise<QuantJournalEntry[]>;
+  saveQuantJournal(entry: QuantJournalEntryInput): Promise<QuantJournalEntry>;
   getLlmSettings(): Promise<LlmSettings>;
   saveLlmSettings(settings: LlmSettings): Promise<LlmSettings>;
   getValuation(symbol: string): Promise<ValuationSnapshot>;

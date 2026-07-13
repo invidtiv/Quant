@@ -19,6 +19,8 @@ import type {
   QuantInsightRecord,
   QuantInsightRequest,
   QuantInsightResponse,
+  QuantJournalEntry,
+  QuantJournalEntryInput,
   Quote,
   SignalScanRequest,
   SignalScanResult,
@@ -55,6 +57,10 @@ const api: QuantApi = {
     ipcRenderer.invoke(IPC.quantAnalyze, request),
   getQuantInsights: (symbol: string, range?: ChartRange): Promise<QuantInsightRecord[]> =>
     ipcRenderer.invoke(IPC.quantInsightsGet, symbol, range),
+  getQuantJournal: (symbol: string): Promise<QuantJournalEntry[]> =>
+    ipcRenderer.invoke(IPC.quantJournalGet, symbol),
+  saveQuantJournal: (entry: QuantJournalEntryInput): Promise<QuantJournalEntry> =>
+    ipcRenderer.invoke(IPC.quantJournalSave, entry),
   getLlmSettings: (): Promise<LlmSettings> =>
     ipcRenderer.invoke(IPC.llmSettingsGet),
   saveLlmSettings: (settings: LlmSettings): Promise<LlmSettings> =>

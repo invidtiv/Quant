@@ -1,6 +1,6 @@
 # Quant
 
-Quant is an open-source desktop market terminal for tracking ETFs and stocks. It combines a watchlist, holdings-driven news, earnings context, annotated charts, macro overlays, signal scoring, and an optional local Quant AI agent.
+Quant is an open-source desktop market terminal for tracking ETFs and stocks. It combines a watchlist, holdings-driven news, earnings context, annotated charts, macro overlays, evidence-backed signal scoring, a decision journal, and an optional verified local Quant AI harness.
 
 The core promise is simple: useful market context without paid API lock-in. Quant can run with public market data sources, deterministic signal analysis, and a local OpenAI-compatible LLM server when you want AI responses. No cloud LLM API key is required for the default experience.
 
@@ -28,7 +28,19 @@ Quant is built for quick market scanning:
 - Inspect news at each detected swing so price action can be read with the surrounding headline context.
 - Toggle macro overlays directly on the chart: jobs, unemployment, CPI, 10Y yield, oil, and VIX.
 - Review a deterministic Signal Desk before asking an AI agent.
+- Inspect numbered evidence with source and quality status before acting on a signal.
+- Save a decision journal entry with the thesis, catalyst, invalidation, and exact signal snapshot.
 - Use Quant AI with no paid cloud LLM API cost by staying in deterministic mode or running a local model server.
+
+## What's New in v1.2.0
+
+- Evidence-Backed Signal Desk with explicit chart, strategy, backtest, earnings, and valuation provenance.
+- Local Decision Journal with planned, active, invalidated, and closed states.
+- Verified Quant AI harness: isolated analyst and verifier workers followed by bounded orchestration.
+- Numbered evidence citations, output validation, worker timing, failure attribution, and deterministic fallback.
+- Local model defaults aligned with the `gemma-4-e4b-it` llama.cpp runtime.
+
+See [CHANGELOG.md](./CHANGELOG.md) for the full release notes.
 
 ## Try It
 
@@ -109,7 +121,7 @@ Today the scanner covers the app's bundled U.S. stock directory plus optional wa
 
 ### Chart Modal and Signal Desk
 
-Opening a symbol brings up the full chart workspace: candlesticks, volume, pivots, risk levels, deterministic signal scoring, valuation context, and earnings context.
+Opening a symbol brings up the full chart workspace: candlesticks, volume, pivots, risk levels, deterministic signal scoring, evidence provenance, valuation context, earnings context, and the local Decision Journal.
 
 ![Quant chart modal](./docs/assets/screenshots/quant-chart-modal.png)
 
@@ -137,9 +149,9 @@ Available chart overlays:
 | VIX | Shows market fear, expected volatility, and stop-width regime |
 | Risk | Draws entry, stop, target, and position sizing context |
 
-### Quant AI Agent
+### Verified Quant AI Harness
 
-Quant AI is a dedicated chart tab. It hydrates the current symbol, chart range, signal evaluation, risk plan, pivot-linked news, earnings, valuation, active macro overlays, and chart screenshot context before producing a memo.
+Quant AI is a dedicated chart tab. It locks a numbered evidence ledger from the current symbol, signal evaluation, risk plan, pivot-linked news, earnings, valuation, and active macro overlays. A clean analyst context writes a provisional memo, an isolated verifier independently audits the same evidence, and a bounded orchestrator reconciles both into the final cited response. The UI exposes the stages, timing, evidence quality, validation checks, and fallbacks.
 
 ![Quant AI agent tab](./docs/assets/screenshots/quant-ai-agent.png)
 
@@ -152,7 +164,7 @@ You have three modes:
 | Mode | Setup | Cloud LLM API Cost | Behavior |
 | --- | --- | --- | --- |
 | Deterministic fallback | None | `$0` | Quant returns a rules-based memo from the signal engine |
-| Local LLM | Run LM Studio, llama.cpp, Ollama OpenAI mode, or a proxy | `$0` | Quant sends chart context to your local OpenAI-compatible server |
+| Local LLM | Run LM Studio, llama.cpp, Ollama OpenAI mode, or a proxy | `$0` | Quant runs analyst, verifier, and orchestrator passes against one evidence ledger |
 | Disabled | Leave local LLM off | `$0` | The AI tab remains usable through deterministic analysis |
 
 Expected local server endpoints:
@@ -165,7 +177,7 @@ Example local setup:
 ```bash
 export QUANT_LLM_ENABLED=1
 export QUANT_LLM_BASE_URL=http://127.0.0.1:8080
-export QUANT_LLM_MODEL=your-local-model-name
+export QUANT_LLM_MODEL=gemma-4-e4b-it
 npm start
 ```
 
@@ -174,7 +186,7 @@ Windows PowerShell:
 ```powershell
 $env:QUANT_LLM_ENABLED="1"
 $env:QUANT_LLM_BASE_URL="http://127.0.0.1:8080"
-$env:QUANT_LLM_MODEL="your-local-model-name"
+$env:QUANT_LLM_MODEL="gemma-4-e4b-it"
 npm start
 ```
 
@@ -192,9 +204,10 @@ You can also configure this through onboarding. Saved LLM preferences are stored
 | Charts | Candlesticks, volume, ranges, pivots, support/resistance, risk overlay |
 | Macro overlays | Jobs, unemployment, CPI, 10Y yield, oil, VIX |
 | Signal Board | End-of-day scan for cup bases, moving-average order, highs, VCP, volume, MACD, rebounds, and relative strength |
-| Signal Desk | Deterministic setup classification, confidence, blockers, risk plan |
-| Quant AI | Agentic chat tab over chart, signal, news, earnings, valuation, macro context |
-| Local persistence | Watchlist, saved Quant AI insights, LLM settings |
+| Signal Desk | Deterministic setup classification, confidence, blockers, risk plan, numbered evidence provenance |
+| Decision Journal | Local thesis, catalyst, invalidation, lifecycle state, and immutable signal snapshot |
+| Quant AI | Verified analyst, isolated verifier, bounded orchestrator, citations, and deterministic fallback |
+| Local persistence | Watchlist, decision journal, saved Quant AI insights, LLM settings |
 | Release builds | macOS and Windows ZIPs published on GitHub Releases |
 
 ## Generated Showcase Visual
@@ -235,11 +248,12 @@ Quant/
         earnings.ts           Earnings calendar data
         holdings.ts           ETF holdings lookup
         insightStore.ts       Saved Quant AI insight records
+        journalStore.ts       Transactional local Decision Journal persistence
         llmSettings.ts        Optional local LLM settings persistence
         macro.ts              Jobs, unemployment, CPI, 10Y, oil, VIX overlays
         news.ts               Market news aggregation
         pivotNews.ts          News grouped around chart pivots
-        quantAi.ts            Local LLM or deterministic Quant AI memo
+        quantAi.ts            Analyst, verifier, and orchestrator harness
         quotes.ts             Watchlist quote data
         signalScanner.ts      End-of-day technical signal scanner
         valuation.ts          Valuation snapshot and formula estimates
@@ -257,11 +271,12 @@ Quant/
         Watchlist.tsx         Watchlist and movers panel
         chart/
           ChartCanvas.tsx     Lightweight Charts rendering
-          QuantAgentPanel.tsx Agentic Quant AI chat UI
-          QuantDecisionPanel.tsx Deterministic Signal Desk
+          QuantAgentPanel.tsx Verified Quant AI harness and evidence trace UI
+          QuantDecisionPanel.tsx Evidence-Backed Signal Desk and Decision Journal
           useMacroOverlays.ts Macro overlay data hook
       styles/                 App, chart, watchlist, news, earnings, analysis CSS
     shared/
+      harness.ts              Immutable numbered evidence-ledger builder
       ipc.ts                  IPC channel names
       types.ts                Shared API and market data contracts
       quant.ts                Deterministic signal engine

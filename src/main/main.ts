@@ -15,6 +15,7 @@ import type {
   LlmSettings,
   MacroOverlayKey,
   PivotPoint,
+  QuantJournalEntryInput,
   QuantInsightRequest,
   SignalScanRequest,
 } from '../shared/types';
@@ -25,6 +26,7 @@ import { getHoldings } from './services/holdings';
 import { getLlmSettings, saveLlmSettings } from './services/llmSettings';
 import { getMacroOverlay } from './services/macro';
 import { getQuantInsights, saveQuantInsight } from './services/insightStore';
+import { getQuantJournal, saveQuantJournal } from './services/journalStore';
 import { getNews } from './services/news';
 import { getPivotNews } from './services/pivotNews';
 import { analyzeQuant } from './services/quantAi';
@@ -121,6 +123,29 @@ function cleanQuantInsightRequest(raw: unknown): QuantInsightRequest | null {
     snapshotDataUrl: typeof r.snapshotDataUrl === 'string' ? r.snapshotDataUrl.slice(0, 1_000_000) : undefined,
     question: typeof r.question === 'string' ? r.question.slice(0, 1200) : undefined,
     thinkingMode: r.thinkingMode === true,
+  };
+}
+
+function cleanQuantJournalInput(raw: unknown): QuantJournalEntryInput | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const value = raw as Partial<QuantJournalEntryInput>;
+  const symbol = normalizeSymbol(value.symbol);
+  if (!symbol || !value.evaluation || typeof value.evaluation !== 'object') return null;
+  if (!value.evaluation.risk || typeof value.evaluation.risk !== 'object') return null;
+  const status =
+    value.status === 'active' || value.status === 'invalidated' || value.status === 'closed'
+      ? value.status
+      : 'planned';
+  return {
+    id: typeof value.id === 'string' ? value.id.slice(0, 200) : undefined,
+    symbol,
+    range: cleanRange(value.range),
+    status,
+    thesis: typeof value.thesis === 'string' ? value.thesis : '',
+    catalyst: typeof value.catalyst === 'string' ? value.catalyst : '',
+    invalidation: typeof value.invalidation === 'string' ? value.invalidation : '',
+    notes: typeof value.notes === 'string' ? value.notes : undefined,
+    evaluation: value.evaluation,
   };
 }
 
@@ -268,6 +293,17 @@ function registerIpcHandlers(): void {
     const symbol = normalizeSymbol(rawSymbol);
     if (!symbol) return [];
     return getQuantInsights(symbol, CHART_RANGES.includes(rawRange as ChartRange) ? (rawRange as ChartRange) : undefined);
+  });
+
+  ipcMain.handle(IPC.quantJournalGet, (_e, rawSymbol: unknown) => {
+    const symbol = normalizeSymbol(rawSymbol);
+    return symbol ? getQuantJournal(symbol) : [];
+  });
+
+  ipcMain.handle(IPC.quantJournalSave, (_e, rawEntry: unknown) => {
+    const entry = cleanQuantJournalInput(rawEntry);
+    if (!entry) throw new Error('Invalid decision journal entry');
+    return saveQuantJournal(entry);
   });
 
   ipcMain.handle(IPC.llmSettingsGet, () => getLlmSettings());

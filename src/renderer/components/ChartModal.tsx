@@ -577,6 +577,9 @@ export function ChartModal({ symbol }: { symbol: string }) {
                     evaluation={evaluation}
                     earnings={earnings}
                     valuation={valuation}
+                    range={range}
+                    chartSource={data?.source}
+                    chartAsOf={data?.candles.length ? new Date(data.candles[data.candles.length - 1].time * 1000).toISOString() : undefined}
                   />
                 </div>
               ) : activeRailTab === 'ai' ? (
