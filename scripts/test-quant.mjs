@@ -3127,6 +3127,7 @@ assert.ok(signalScan.signals.some((s) => s.kind === 'ma-alignment'));
 assert.equal(llm.providerDefinition('local').baseUrl, 'http://127.0.0.1:8080/v1');
 assert.equal(llm.providerDefinition('claude').requiresApiKey, true);
 assert.equal(llm.normalizeApiBaseUrl('https://api.openai.com/v1///'), 'https://api.openai.com/v1');
+assert.equal(llm.LLM_CONNECTION_TEST_MAX_TOKENS, 128);
 
 const pulseCharts = marketPulse.MARKET_PULSE_ASSETS.map((asset, assetIndex) => ({
   symbol: asset.symbol,

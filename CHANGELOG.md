@@ -2,6 +2,16 @@
 
 All notable changes to Quant are documented here.
 
+## [Unreleased]
+
+### Fixed
+
+- Fixed LLM Settings connection tests returning an empty response after the first eight tokens for OpenAI and local Ollama/OpenAI-compatible endpoints. Connection probes now reserve a 128-token completion budget, including room for reasoning tokens.
+
+### Testing
+
+- Added a regression assertion for the connection-test token budget.
+
 ## [2.0.0] - 2026-07-28
 
 ### Added
