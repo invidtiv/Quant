@@ -1,6 +1,6 @@
 # Quant release notes
 
-## LLM connection-test fix
+## 2.0.1 — LLM connection-test and calendar fixes
 
 The LLM Settings connection test no longer truncates at eight tokens. OpenAI reasoning models can consume that entire budget before emitting visible text, and local Ollama/OpenAI-compatible endpoints can truncate the probe. The shared connection-test budget is now 128 tokens for both endpoint families.
 

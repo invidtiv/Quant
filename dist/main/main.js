@@ -3423,12 +3423,14 @@ var SESSION_BAR_START_MINUTES = [
   11 * 60 + 30,
   12 * 60 + 30,
   13 * 60 + 30,
-  14 * 60 + 30
+  14 * 60 + 30,
+  15 * 60 + 30
 ];
 var EARLY_CLOSE_BAR_START_MINUTES = [
   9 * 60 + 30,
   10 * 60 + 30,
-  11 * 60 + 30
+  11 * 60 + 30,
+  12 * 60 + 30
 ];
 var ForecastCalendarFailure = class extends Error {
   code = "MARKET_CALENDAR_FAILED";
